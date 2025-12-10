@@ -1,0 +1,76 @@
+[
+    {
+      "response_type": "greeting",
+      "user_input": ["hello", "hi", "hey"],
+      "bot_response": "Hey there!",
+      "required_words": []
+    },
+    
+    {
+      "response_type": "jokes",
+      "user_input": ["joke", "tell me a joke", " i want u to joke"],
+      "bot_response": ["What did the policeman say to his hungry stomach? Freeze. You are under a vest. ","Why did the student eat his homework? Because the teacher told him it was a piece of cake."],
+      "required_words": []
+    },
+    {
+      "response_type": "backlog_def",
+      "user_input": ["backlog", "what is a backlog" ],
+      "bot_response": "In Agile development, a product backlog is a prioritized list of deliverables (such as new features) that should be implemented as part of a project or product development. It's a decision-making artifact that helps you estimate, refine, and prioritize everything you might sometime in the future want to complete.",
+      "required_words": []
+    },
+    {
+      "response_type": "import zephyr",
+      "user_input": ["zephyr", "jira zephyr", "import data from zephyz"],
+      "bot_response": "Zephyr is a jira pluggin , it is the most widely used test management tool that gives your project team control over every stage of the software lifecycle. Zephyr enhances test organization through a folder structure, by enabling logical grouping of test cases within cycles. In addition to that, Zephyr dashboards display specific testing metrics such as test distribution, test case execution, top defects impacting testing, test execution progress and more. Try a free trial for Zephyr for Jira and see for yourself just how easy it is. This will be a great tool to work with in your projects. Hope this will help you too.",
+      "required_words": []
+    },
+    {
+      "response_type": "what sprint",
+      "user_input": [ "sprint"],
+      "bot_response": "A sprint is an iteration of an Agile project. In other words, it is common for project teams to break Agile projects into short, repeatable phases. These phases typically last between one and four weeks..",
+      "required_words": []
+    },
+    {
+      "response_type": "what rais",
+      "user_input": ["rais"  ],
+      "bot_response": "Rais is a web-based project management tool that helps businesses and teams plan, organize, and track their projects from start to finish  It offers features such as project timelines, task lists, team collaboration and  progress tracking . Rais is designed to be easy to use, with a simple and intuitive interface that allows users to quickly create and manage projects. It also integrates with other tools like Slack, jira, and Zephyr, making it easy to connect and collaborate with other team members.",
+      "required_words": []
+    },
+    {
+      "response_type": "greeting",
+      "user_input": ["مرحبا", "اهلا", "السلام عليكم"],
+      "bot_response": "أهلاً وسهلاً!",
+      "required_words": [],
+      "language": "ar"
+    },
+    {
+      "response_type": "jokes",
+      "user_input": ["نكتة", "امزح معي", "قل لي نكتة"],
+      "bot_response": [
+        "مرة واحد ذهب إلى الطبيب، قال له: كلما شربت شاي أحس بألم في عيني، قال له الطبيب: اشربه بعد ما تطلع الملعقة!",
+        "في طالب راح للمدرسة من غير شنطة، سألوه ليش؟ قالهم: أنا جاي أسمع مش أدرس."
+      ],
+      "required_words": [],
+      "language": "ar"
+    },
+    {
+      "response_type": "greeting",
+      "user_input": ["see you", "goodbye", "bye"],
+      "bot_response": "See you later!",
+      "required_words": []
+    },
+    {
+      "response_type": "greeting",
+      "user_input": ["nice", "to", "know", "you"],
+      "bot_response": "The pleasure is all mine!",
+      "required_words": ["nice", "meet", "you"]
+    },
+    
+    
+    {
+      "response_type": "question",
+      "user_input": ["how","how are you"],
+      "bot_response": "I'm great! Thanks for asking.",
+      "required_words": ["how", "are", "you"]
+    }
+  ]

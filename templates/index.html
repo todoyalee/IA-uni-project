@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html>
+<title>ChatBot with Emotion & Wikipedia</title>
+<link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<style>
+		/* Your EXACT original CSS */
+		@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+		*,
+		*::before,
+		*::after { box-sizing: border-box; }
+		body, h1, h2, h3, h4, p, figure, blockquote, dl, dd { margin: 0; }
+		ul[role='list'], ol[role='list'] { list-style: none; }
+		html:focus-within { scroll-behavior: smooth; }
+		body { min-height: 100vh; text-rendering: optimizeSpeed; line-height: 1.5; font-family: 'Poppins', sans-serif; background: linear-gradient(90deg, var(--grey) 31px, transparent 1px) 50%, linear-gradient(180deg, var(--grey) 31px, var(--blue) 1px) 50%; background-size: 32px 32px; color: var(--dark); }
+		a:not([class]) { text-decoration-skip-ink: auto; }
+		img, picture { max-width: 100%; display: block; }
+		input, button, textarea, select { font: inherit; }
+		@media (prefers-reduced-motion: reduce) {
+			html:focus-within { scroll-behavior: auto; }
+			*, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+		}
+		:root { --blue: #335DFF; --grey: #F5F5F5; --grey-d-1: #EEE; --grey-d-2: #DDD; --grey-d-3: #888; --white: #FFF; --dark: #222; }
+		/* CHATBOX CSS - YOUR ORIGINAL DESIGN */
+		.chatbox-wrapper { position: fixed; bottom: 2rem; right: 2rem; width: 4rem; height: 4rem; }
+		.chatbox-toggle { width: 100%; height: 100%; background: var(--blue); color: var(--white); font-size: 2rem; display: flex; justify-content: center; align-items: center; border-radius: 50%; cursor: pointer; transition: .2s; }
+		.chatbox-toggle:active { transform: scale(.9); }
+		.chatbox-message-wrapper { position: absolute; bottom: calc(100% + 1rem); right: 0; width: 420px; border-radius: .5rem; overflow: hidden; box-shadow: .5rem .5rem 2rem rgba(0, 0, 0, .1); transform: scale(0); transform-origin: bottom right; transition: .2s; }
+		.chatbox-message-wrapper.show { transform: scale(1); }
+		.chatbox-message-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--white); border-bottom: 1px solid var(--grey-d-2); }
+		.chatbox-message-profile { display: flex; align-items: center; gap: .5rem; }
+		.chatbox-message-profile img { width: 50px; height: 50px; object-fit: cover; border-radius: 50%; }
+		.chatbox-message-name { font-size: 1rem; color: var(--dark); }
+		.chatbox-message-status { font-size: .875rem; color: var(--grey-d-3); }
+		.chatbox-message-dropdown { position: relative; }
+		.chatbox-message-dropdown-toggle { font-size: 1.5rem; color: var(--dark); cursor: pointer; }
+		.chatbox-message-dropdown-menu { position: absolute; top: 100%; right: 0; background: var(--white); box-shadow: .5rem .5rem 2rem rgba(0, 0, 0, .1); border-radius: .5rem; overflow: hidden; display: none; z-index: 10; }
+		.chatbox-message-dropdown-menu.show { display: block; }
+		.chatbox-message-dropdown-menu li { padding: .5rem 1rem; }
+		.chatbox-message-dropdown-menu li:hover { background: var(--grey-d-1); }
+		.chatbox-message-dropdown-menu a { color: var(--dark); text-decoration: none; }
+		.chatbox-message-content { height: 400px; overflow-y: auto; padding: 1rem; background: var(--grey); display: flex; flex-direction: column; gap: .5rem; }
+		.chatbox-message-no-message { text-align: center; color: var(--grey-d-3); margin: auto; }
+		.chatbox-message-item { display: flex; align-items: flex-end; gap: .5rem; }
+		.chatbox-message-item.sent { flex-direction: row-reverse; }
+		.chatbox-message-item-text { max-width: 75%; padding: .75rem 1rem; border-radius: 1rem; background: var(--white); box-shadow: .25rem .25rem 1rem rgba(0, 0, 0, .05); }
+		.chatbox-message-item.sent .chatbox-message-item-text { background: var(--blue); color: var(--white); }
+		.chatbox-message-item-time { font-size: .75rem; color: var(--grey-d-3); }
+		.chatbox-message-bottom { padding: 1rem; background: var(--white); border-top: 1px solid var(--grey-d-2); }
+		.chatbox-message-form { display: flex; align-items: center; gap: .5rem; }
+		.chatbox-message-input { flex: 1; border: none; outline: none; padding: .75rem 1rem; border-radius: .5rem; background: var(--grey); resize: none; }
+		.chatbox-message-submit { padding: .75rem 1rem; background: var(--blue); color: var(--white); border: none; border-radius: .5rem; cursor: pointer; display: flex; align-items: center; gap: .5rem; }
+		.chatbox-message-submit:hover { opacity: .9; }
+		
+		/* EMOTION INDICATORS */
+		.emotion-indicator {
+			display: inline-block;
+			padding: 3px 10px;
+			border-radius: 15px;
+			font-size: 0.75em;
+			margin-top: 5px;
+			font-weight: 600;
+			letter-spacing: 0.5px;
+		}
+		.emotion-joy { background: linear-gradient(135deg, #FFD700, #FFA500); color: #333; }
+		.emotion-sadness { background: linear-gradient(135deg, #1E90FF, #4169E1); color: white; }
+		.emotion-anger { background: linear-gradient(135deg, #FF4500, #DC143C); color: white; }
+		.emotion-fear { background: linear-gradient(135deg, #9400D3, #8A2BE2); color: white; }
+		.emotion-surprise { background: linear-gradient(135deg, #FF8C00, #FF6347); color: white; }
+		.emotion-neutral { background: linear-gradient(135deg, #808080, #696969); color: white; }
+		
+		/* WIKIPEDIA BADGE */
+		.wikipedia-badge {
+			display: inline-block;
+			background: linear-gradient(135deg, #36D1DC, #5B86E5);
+			color: white;
+			padding: 2px 8px;
+			border-radius: 10px;
+			font-size: 0.7em;
+			margin-left: 5px;
+			font-weight: bold;
+		}
+		
+		/* TTS CONTROLS */
+		.tts-controls {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 8px 0;
+			margin-bottom: 10px;
+			border-bottom: 1px solid var(--grey-d-2);
+		}
+		.tts-toggle {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			cursor: pointer;
+		}
+		.tts-toggle input[type="checkbox"] {
+			display: none;
+		}
+		.tts-toggle-slider {
+			width: 40px;
+			height: 20px;
+			background: var(--grey-d-2);
+			border-radius: 20px;
+			position: relative;
+			transition: background 0.3s;
+		}
+		.tts-toggle-slider:before {
+			content: '';
+			position: absolute;
+			width: 16px;
+			height: 16px;
+			background: white;
+			border-radius: 50%;
+			top: 2px;
+			left: 2px;
+			transition: transform 0.3s;
+		}
+		.tts-toggle input:checked + .tts-toggle-slider {
+			background: var(--blue);
+		}
+		.tts-toggle input:checked + .tts-toggle-slider:before {
+			transform: translateX(20px);
+		}
+		.tts-btn {
+			padding: 5px 12px;
+			background: var(--grey-d-2);
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 0.8em;
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			transition: all 0.2s;
+		}
+		.tts-btn:hover {
+			background: var(--grey-d-1);
+			transform: translateY(-1px);
+		}
+		
+		/* TYPING INDICATOR */
+		.typing-indicator {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 10px 15px;
+			background: var(--white);
+			border-radius: 1rem;
+			box-shadow: .25rem .25rem 1rem rgba(0,0,0,.05);
+			font-size: 0.9em;
+			color: var(--grey-d-3);
+		}
+		.typing-dot {
+			width: 7px;
+			height: 7px;
+			background: var(--grey-d-3);
+			border-radius: 50%;
+			animation: typing 1.4s infinite ease-in-out;
+		}
+		.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+		.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+		@keyframes typing {
+			0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+			40% { transform: scale(1); opacity: 1; }
+		}
+		
+		/* SUGGESTIONS */
+		.suggestions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin-top: 10px;
+			padding: 5px;
+		}
+		.suggestion-btn {
+			padding: 6px 12px;
+			background: var(--white);
+			border: 1px solid var(--grey-d-2);
+			border-radius: 20px;
+			font-size: 0.8em;
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+		.suggestion-btn:hover {
+			background: var(--blue);
+			color: white;
+			border-color: var(--blue);
+			transform: translateY(-1px);
+		}
+	</style>
+</head>
+<body>
+
+<div class="chatbox-wrapper">
+	<div class="chatbox-toggle">
+		<i class='bx bx-message-dots'></i>
+	</div>
+	<div class="chatbox-message-wrapper">
+		<div class="chatbox-message-header">
+			<div class="chatbox-message-profile">
+				<img src="{{ url_for('static', filename='chatbot.png') }}" >
+				<div>
+					<h4 class="chatbox-message-name">Rais AI</h4>
+					<p class="chatbox-message-status" id="statusIndicator">online • Emotion Detection Active</p>
+				</div>
+			</div>	
+			<div class="chatbox-message-dropdown">
+				<i class='bx bx-dots-vertical-rounded chatbox-message-dropdown-toggle'></i>
+				<ul class="chatbox-message-dropdown-menu">
+					<li><a href="#" id="clearChat"><i class='bx bx-trash'></i> Clear Chat</a></li>
+					<li><a href="#" id="toggleEmotion"><i class='bx bx-heart'></i> Hide Emotions</a></li>
+					<li><a href="#" id="showSuggestions"><i class='bx bx-bulb'></i> Show Suggestions</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="chatbox-message-content" id="chatContent">
+			<h4 class="chatbox-message-no-message">You don't have message yet! Try asking about anything!</h4>
+			
+			<!-- Suggestions -->
+			<div class="suggestions" id="suggestions" style="display: none;">
+				<div class="suggestion-btn" onclick="quickQuestion('What is artificial intelligence?')">What is AI?</div>
+				<div class="suggestion-btn" onclick="quickQuestion('Who is Albert Einstein?')">Albert Einstein</div>
+				<div class="suggestion-btn" onclick="quickQuestion('Tell me about Python programming')">Python</div>
+				<div class="suggestion-btn" onclick="quickQuestion('What is machine learning?')">Machine Learning</div>
+				<div class="suggestion-btn" onclick="quickQuestion('I am feeling happy today!')">I'm happy!</div>
+				<div class="suggestion-btn" onclick="quickQuestion('I feel sad and lonely')">I'm sad</div>
+			</div>
+		</div>
+		<div class="chatbox-message-bottom">
+			<!-- TTS Controls -->
+			<div class="tts-controls">
+				<label class="tts-toggle">
+					<input type="checkbox" id="ttsToggle" checked>
+					<span class="tts-toggle-slider"></span>
+					<span style="font-size: 0.8em; font-weight: 500;">Voice Response</span>
+				</label>
+				<div style="display: flex; gap: 5px;">
+					<button class="tts-btn" id="stopSpeech" title="Stop speaking">
+						<i class='bx bx-stop-circle'></i>Stop
+					</button>
+					<button class="tts-btn" id="testVoice" title="Test voice">
+						<i class='bx bx-volume-full'></i>Test
+					</button>
+				</div>
+			</div>
+			
+			<!-- Chat form -->
+			<form action="#" class="chatbox-message-form" id="chatForm">
+				<textarea rows="1" placeholder="Ask anything... (e.g., What is AI? or I feel happy today)" class="chatbox-message-input" id="textInput"></textarea>
+				<button type="submit" class="chatbox-message-submit" title="Send message">
+					<i class='bx bx-send'></i>Send
+				</button>
+			</form>
+		</div>	
+	</div>
+</div>
+
+<script>
+	// Configuration
+	const id = "user_" + Math.random().toString(36).substr(2, 9);
+	let ttsEnabled = true;
+	let showEmotions = true;
+	let isSpeaking = false;
+	
+	// DOM Elements
+	const textarea = document.getElementById('textInput');
+	const chatboxForm = document.getElementById('chatForm');
+	const chatboxMessageWrapper = document.getElementById('chatContent');
+	const chatboxNoMessage = document.querySelector('.chatbox-message-no-message');
+	const ttsToggle = document.getElementById('ttsToggle');
+	const stopSpeechBtn = document.getElementById('stopSpeech');
+	const testVoiceBtn = document.getElementById('testVoice');
+	const statusIndicator = document.getElementById('statusIndicator');
+	const suggestionsDiv = document.getElementById('suggestions');
+	
+	console.log('User ID:', id);
+	
+	// ========== TTS FUNCTIONS ==========
+	function speakText(text) {
+		if (!ttsEnabled || !text) return;
+		
+		if ('speechSynthesis' in window) {
+			// Cancel any ongoing speech
+			speechSynthesis.cancel();
+			isSpeaking = false;
+			
+			const utterance = new SpeechSynthesisUtterance(text);
+			
+			// Configure voice
+			utterance.rate = 1.1;
+			utterance.pitch = 1.2;
+			utterance.volume = 1.2;
+			
+			// Get voices
+			const voices = speechSynthesis.getVoices();
+			if (voices.length > 0) {
+				// Try to find a natural sounding voice
+				const femaleVoices  = voices.find(v => 
+					v.name.includes('Female') || 
+					v.name.includes('Zira') || 
+					v.name.includes('Samantha')
+				) || voices[0];
+				        let preferredVoice = femaleVoices[0] || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+				
+				utterance.voice = preferredVoice;
+			}
+			
+			// Update speaking state
+			isSpeaking = true;
+			updateStatus('speaking...', '#4CAF50');
+			
+			utterance.onstart = () => {
+				isSpeaking = true;
+				updateStatus('speaking...', '#4CAF50');
+			};
+			
+			utterance.onend = () => {
+				isSpeaking = false;
+				updateStatus('online • Emotion Detection Active', 'var(--grey-d-3)');
+			};
+			
+			utterance.onerror = (e) => {
+				console.error('Speech error:', e);
+				isSpeaking = false;
+				updateStatus('online • Emotion Detection Active', 'var(--grey-d-3)');
+			};
+			
+			// Speak
+			speechSynthesis.speak(utterance);
+		} else {
+			console.log('Speech synthesis not supported');
+			updateStatus('TTS not supported', '#FF9800');
+		}
+	}
+	
+	function stopSpeech() {
+		if ('speechSynthesis' in window) {
+			speechSynthesis.cancel();
+			isSpeaking = false;
+			updateStatus('online • Emotion Detection Active', 'var(--grey-d-3)');
+		}
+	}
+	
+	function updateStatus(text, color) {
+		if (statusIndicator) {
+			statusIndicator.textContent = text;
+			statusIndicator.style.color = color;
+		}
+	}
+	
+	// ========== EMOTION FUNCTIONS ==========
+	function getEmotionClass(emotion) {
+		const emotionMap = {
+			'joy': 'emotion-joy',
+			'sadness': 'emotion-sadness',
+			'anger': 'emotion-anger',
+			'fear': 'emotion-fear',
+			'surprise': 'emotion-surprise',
+			'neutral': 'emotion-neutral',
+			'love': 'emotion-joy'
+		};
+		return emotionMap[emotion.toLowerCase()] || 'emotion-neutral';
+	}
+	
+	// ========== UI FUNCTIONS ==========
+	// Adjust textarea rows
+	textarea.addEventListener('input', function () {
+		let lines = textarea.value.split('\n').length;
+		if (textarea.rows < 6 || lines < 6) {
+			textarea.rows = lines;
+		}
+		chatboxForm.style.alignItems = textarea.rows > 1 ? 'flex-end' : 'center';
+	});
+	
+	// Toggle chatbox
+	const chatboxToggle = document.querySelector('.chatbox-toggle');
+	const chatboxMessage = document.querySelector('.chatbox-message-wrapper');
+	chatboxToggle.addEventListener('click', function () {
+		chatboxMessage.classList.toggle('show');
+	});
+	
+	// Dropdown
+	const dropdownToggle = document.querySelector('.chatbox-message-dropdown-toggle');
+	const dropdownMenu = document.querySelector('.chatbox-message-dropdown-menu');
+	dropdownToggle.addEventListener('click', function (e) {
+		e.stopPropagation();
+		dropdownMenu.classList.toggle('show');
+	});
+	
+	document.addEventListener('click', function(e) {
+		if(!e.target.matches('.chatbox-message-dropdown-toggle')) {
+			dropdownMenu.classList.remove('show');
+		}
+	});
+	
+	// Clear chat
+	document.getElementById('clearChat').addEventListener('click', function(e) {
+		e.preventDefault();
+		chatboxMessageWrapper.innerHTML = `
+			<h4 class="chatbox-message-no-message">You don't have message yet! Try asking about anything!</h4>
+			<div class="suggestions" id="suggestions" style="display: ${suggestionsDiv.style.display};">
+				<div class="suggestion-btn" onclick="quickQuestion('What is artificial intelligence?')">What is AI?</div>
+				<div class="suggestion-btn" onclick="quickQuestion('Who is Albert Einstein?')">Albert Einstein</div>
+				<div class="suggestion-btn" onclick="quickQuestion('Tell me about Python programming')">Python</div>
+				<div class="suggestion-btn" onclick="quickQuestion('What is machine learning?')">Machine Learning</div>
+				<div class="suggestion-btn" onclick="quickQuestion('I am feeling happy today!')">I'm happy!</div>
+				<div class="suggestion-btn" onclick="quickQuestion('I feel sad and lonely')">I'm sad</div>
+			</div>
+		`;
+		chatboxNoMessage.style.display = 'block';
+		stopSpeech();
+	});
+	
+	// Toggle emotion display
+	document.getElementById('toggleEmotion').addEventListener('click', function(e) {
+		e.preventDefault();
+		showEmotions = !showEmotions;
+		this.innerHTML = showEmotions ? 
+			'<i class="bx bx-hide"></i> Hide Emotions' : 
+			'<i class="bx bx-show"></i> Show Emotions';
+		
+		// Update existing emotion indicators
+		document.querySelectorAll('.emotion-indicator').forEach(el => {
+			el.style.display = showEmotions ? 'inline-block' : 'none';
+		});
+	});
+	
+	// Show suggestions
+	document.getElementById('showSuggestions').addEventListener('click', function(e) {
+		e.preventDefault();
+		const isVisible = suggestionsDiv.style.display === 'flex';
+		suggestionsDiv.style.display = isVisible ? 'none' : 'flex';
+		this.innerHTML = isVisible ? 
+			'<i class="bx bx-bulb"></i> Show Suggestions' : 
+			'<i class="bx bx-hide"></i> Hide Suggestions';
+	});
+	
+	// Quick question from suggestion
+	window.quickQuestion = function(question) {
+		textarea.value = question;
+		chatboxForm.dispatchEvent(new Event('submit'));
+	};
+	
+	// Stop speech button
+	stopSpeechBtn.addEventListener('click', function(e) {
+		e.preventDefault();
+		stopSpeech();
+	});
+	
+	// Test voice button
+	testVoiceBtn.addEventListener('click', function(e) {
+		e.preventDefault();
+		speakText('Hello! This is a voice test. Text to speech is working perfectly. I can detect emotions and answer questions from Wikipedia.');
+	});
+	
+	// Toggle TTS from checkbox
+	ttsToggle.addEventListener('change', function() {
+		ttsEnabled = this.checked;
+		if (!ttsEnabled) {
+			stopSpeech();
+		}
+	});
+	
+	// ========== CHAT FUNCTIONS ==========
+	function scrollBottom() {
+		chatboxMessageWrapper.scrollTo(0, chatboxMessageWrapper.scrollHeight);
+	}
+	
+	function addZero(num) { 
+		return num < 10 ? '0' + num : num; 
+	}
+	
+	// Write user message
+	function writeMessage(messageText) {
+		const today = new Date();
+		const message = `
+			<div class="chatbox-message-item sent">
+				<span class="chatbox-message-item-text">${messageText.replace(/\n/g, '<br>\n')}</span>
+				<span class="chatbox-message-item-time">${addZero(today.getHours())}:${addZero(today.getMinutes())}</span>
+			</div>
+		`;
+		chatboxMessageWrapper.insertAdjacentHTML('beforeend', message);
+		chatboxForm.style.alignItems = 'center';
+		textarea.rows = 1;
+		textarea.focus();
+		textarea.value = '';
+		chatboxNoMessage.style.display = 'none';
+		scrollBottom();
+	}
+	
+	// Show typing indicator
+	function showTypingIndicator() {
+		const typingHTML = `
+			<div class="chatbox-message-item received" id="typingIndicator">
+				<div class="typing-indicator">
+					Rais is thinking
+					<div class="typing-dot"></div>
+					<div class="typing-dot"></div>
+					<div class="typing-dot"></div>
+				</div>
+			</div>
+		`;
+		chatboxMessageWrapper.insertAdjacentHTML('beforeend', typingHTML);
+		scrollBottom();
+	}
+	
+	// Remove typing indicator
+	function removeTypingIndicator() {
+		const typingIndicator = document.getElementById('typingIndicator');
+		if (typingIndicator) {
+			typingIndicator.remove();
+		}
+	}
+	
+	// Check if message is Wikipedia question
+	function isWikipediaQuestion(text) {
+		const wikipediaKeywords = [
+			"what is", "who is", "tell me about", "explain", "define",
+			"what are", "who are", "what was", "who was", "what were"
+		];
+		return wikipediaKeywords.some(keyword => text.toLowerCase().includes(keyword));
+	}
+	
+	// Auto reply from bot
+	function autoReply(userMessage) {
+		const today = new Date();
+		
+		// Show typing indicator
+		showTypingIndicator();
+		
+		// Send request to server
+		$.ajax({
+			type: 'POST',
+			url: '/get',
+			contentType: 'application/json; charset=utf-8',
+			data: JSON.stringify({ 
+				msg: userMessage, 
+				id: id 
+			}),
+			dataType: 'json',
+			success: function(response) {
+				// Remove typing indicator
+				removeTypingIndicator();
+				
+				const emotion = response.emotion || 'neutral';
+				const emotionClass = getEmotionClass(emotion);
+				
+				// Check if it's a Wikipedia response
+				const isWikiResponse = response.msg.toLowerCase().includes('according to wikipedia') || 
+									  response.msg.toLowerCase().includes('wikipedia');
+				
+				const wikiBadge = isWikiResponse ? 
+					'<span class="wikipedia-badge">Wikipedia</span>' : '';
+				
+				const emotionIndicator = showEmotions ? 
+					`<div class="emotion-indicator ${emotionClass}" style="margin-top: 5px; display: ${showEmotions ? 'inline-block' : 'none'}">
+						${emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+					</div>` : '';
+				
+				const messageHTML = `
+					<div class="chatbox-message-item received">
+						<span class="chatbox-message-item-text">
+							${response.msg}
+							${wikiBadge}
+						</span>
+						${emotionIndicator}
+						<span class="chatbox-message-item-time">${addZero(today.getHours())}:${addZero(today.getMinutes())}</span>
+					</div>
+				`;
+				
+				chatboxMessageWrapper.insertAdjacentHTML('beforeend', messageHTML);
+				scrollBottom();
+				
+				// Speak bot reply
+				speakText(response.msg);
+			},
+			error: function(xhr, status, error) {
+				// Remove typing indicator
+				removeTypingIndicator();
+				
+				console.error('Error:', error);
+				const messageHTML = `
+					<div class="chatbox-message-item received">
+						<span class="chatbox-message-item-text">Sorry, I'm having trouble connecting. Please try again.</span>
+						<span class="chatbox-message-item-time">${addZero(today.getHours())}:${addZero(today.getMinutes())}</span>
+					</div>
+				`;
+				chatboxMessageWrapper.insertAdjacentHTML('beforeend', messageHTML);
+				scrollBottom();
+			}
+		});
+	}
+	
+	// Submit handler
+	chatboxForm.addEventListener('submit', function(e) {
+		e.preventDefault();
+		const userMessage = textarea.value.trim();
+		if (!userMessage) return;
+		
+		// Write user message immediately
+		writeMessage(userMessage);
+		
+		// Get bot response after short delay
+		setTimeout(() => autoReply(userMessage), 300);
+	});
+	
+	// Enter key to send (Ctrl+Enter for new line)
+	textarea.addEventListener('keydown', function(e) {
+		if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+			e.preventDefault();
+			chatboxForm.dispatchEvent(new Event('submit'));
+		}
+	});
+	
+	// Load voices when available
+	if ('speechSynthesis' in window) {
+		speechSynthesis.getVoices();
+		
+		speechSynthesis.onvoiceschanged = function() {
+			console.log('Voices loaded:', speechSynthesis.getVoices().length);
+		};
+	}
+	
+	// Initialize on page load
+	window.addEventListener('load', function() {
+		// Test server connection
+		fetch('/test')
+			.then(res => res.json())
+			.then(data => {
+				console.log('Server status:', data);
+				if (data.emotion_model === 'loaded') {
+					updateStatus('online • AI Emotion Model Active', '#4CAF50');
+				}
+			})
+			.catch(err => console.error('Connection test failed:', err));
+		
+		// Focus on textarea when chatbox opens
+		chatboxToggle.addEventListener('click', function() {
+			setTimeout(() => textarea.focus(), 300);
+		});
+	});
+</script>
+</body>
+</html>
