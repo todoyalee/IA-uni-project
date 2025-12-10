@@ -81,7 +81,7 @@ wikipedia.set_rate_limiting(True)
 def get_db():
     try:
         return mysql.connector.connect(
-            host="localhost",
+            host="localhost"
             user="root",
             password="",
             database="mightguy"
@@ -266,9 +266,9 @@ def get_response(user_input, user_id):
                 
                 # Add emotion-based customization
                 emotion_prefix = {
-                    'joy': "😊 ",
-                    'sadness': "😔 ",
-                    'anger': "😠 ",
+                    'joy': "",
+                    'sadness': " ",
+                    'anger': " ",
                     'fear': "😨 ",
                     'surprise': "😲 "
                 }.get(emotion, "")
