@@ -7,7 +7,7 @@
     },
     
     {
-      "response_type": "jokes",
+      "response_type": "jokes ",
       "user_input": ["joke", "tell me a joke", " i want u to joke"],
       "bot_response": ["What did the policeman say to his hungry stomach? Freeze. You are under a vest. ","Why did the student eat his homework? Because the teacher told him it was a piece of cake."],
       "required_words": []

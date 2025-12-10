@@ -298,7 +298,7 @@ def get_response(user_input, user_id):
     # ===== 3. DEFAULT RESPONSES WITH EMOTION AWARENESS =====
     emotion_responses = {
         'joy': [
-            f"I'm glad you're feeling happy! 😊 Tell me more about what's making you feel good.",
+            f"I'm so glad that your feelign happy 😊 Tell me more about what's making you feel good.",
             f"Your joy is contagious! 😄 How can I help you today?",
             f"Great to see you in a good mood! What would you like to know?"
         ],
